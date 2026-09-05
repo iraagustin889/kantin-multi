@@ -82,4 +82,3 @@ class User extends Authenticatable implements PasskeyUser
     {
         return $this->role?->name === 'tenant';
     }
-}
