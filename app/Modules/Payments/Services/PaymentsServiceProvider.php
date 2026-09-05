@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Providers;
+namespace App\Modules\Payments\Services;
 
 use Illuminate\Support\ServiceProvider;
 

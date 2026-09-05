@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Providers;
+namespace App\Modules\Kitchen\Services;
 
 use Illuminate\Support\ServiceProvider;
 

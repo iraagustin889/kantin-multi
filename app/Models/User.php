@@ -65,6 +65,8 @@ class User extends Authenticatable implements PasskeyUser
 
     /**
      * The role assigned to this user.
+     *
+     * @return BelongsTo<Role, $this>
      */
     public function role(): BelongsTo
     {

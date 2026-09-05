@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Providers;
+namespace App\Modules\Catalog\Services;
 
 use Illuminate\Support\ServiceProvider;
 
