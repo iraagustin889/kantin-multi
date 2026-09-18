@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToTenant;
 use Database\Factories\ModifierOptionFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -11,6 +12,7 @@ class ModifierOption extends Model
 {
     /** @use HasFactory<ModifierOptionFactory> */
     use HasFactory;
+    use BelongsToTenant;
 
     protected $fillable = ['name', 'price_delta', 'stock_qty', 'is_available'];
 

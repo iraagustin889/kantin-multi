@@ -11,3 +11,10 @@ parameters:
         - routes/
 
     level: 7
+
+services:
+    -
+        class: App\PHPStan\Rules\NoRawScopeBypassRule
+        tags:
+            - phpstan.rules.rule
+            
