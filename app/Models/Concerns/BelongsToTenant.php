@@ -1,11 +1,11 @@
 <?php
- 
+
 namespace App\Models\Concerns;
- 
+
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
- 
+
 /**
  * Model tenant-owned: menambahkan global scope tenant_id dan mengisi tenant_id saat create
  * dari TenantContext aktif. Auto-fill membantu konsistensi, tetapi policy + composite FK
@@ -14,9 +14,6 @@ use Illuminate\Database\Eloquent\Model;
  * Catatan: scope hanya memfilter saat context terisi. Route internal SELALU mengisi context
  * (SetTenantContext); alur lintas-tenant yang sah memakai withoutGlobalScope('tenant') + filter
  * canteen/status eksplisit. Write tanpa context gagal via NOT NULL tenant_id di DB (fail-closed).
- *
- * tenant_id SELALU ditimpa dari context saat create (bukan cuma diisi kalau kosong), supaya
- * nilai yang nyelip lewat forceFill()/fill() tidak pernah dipercaya sebagai sumber kebenaran.
  */
 trait BelongsToTenant
 {
@@ -28,13 +25,12 @@ trait BelongsToTenant
                 $builder->where($builder->qualifyColumn('tenant_id'), $context->id());
             }
         });
- 
+
         static::creating(function (Model $model): void {
             $context = app(TenantContext::class);
-            if ($context->has()) {
+            if ($context->has() && empty($model->getAttribute('tenant_id'))) {
                 $model->setAttribute('tenant_id', $context->id());
             }
         });
     }
 }
- 

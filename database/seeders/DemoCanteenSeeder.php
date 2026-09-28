@@ -15,100 +15,94 @@ use App\Models\User;
 use App\Models\UserTenantRole;
 use Illuminate\Database\Seeder;
 
+/**
+ * Data demo deterministik & idempoten: 1 kantin, 2 tenant, komisi, katalog, meja, role.
+ * Idempoten via firstOrNew + forceFill (kolom guarded seperti tenant_id di-set eksplisit).
+ */
 class DemoCanteenSeeder extends Seeder
 {
     public function run(): void
     {
-        // 1 kantin
-        $canteen = Canteen::updateOrCreate(
-            ['code' => 'DEMO01'],
-            [
-                'slug' => 'kantin-demo',
-                'name' => 'Kantin Demo',
-                'tax_rate' => 0.10,
-                'service_fee_rate' => 0.02,
+        $canteen = tap(Canteen::firstOrNew(['code' => 'KTN-PUSAT']))
+            ->forceFill([
+                'slug' => 'kantin-pusat',
+                'name' => 'Kantin Pusat',
+                'tax_rate' => 0.1000,
+                'service_fee_rate' => 0.0200,
                 'status' => 'active',
-            ]
-        );
+            ]);
+        $canteen->save();
 
-        // meja, tidak terikat tenant tertentu
-        DiningTable::updateOrCreate(
-            ['canteen_id' => $canteen->id, 'code' => 'T01'],
-            ['label' => 'Meja 1', 'zone' => 'Indoor', 'status' => 'active']
-        );
-        DiningTable::updateOrCreate(
-            ['canteen_id' => $canteen->id, 'code' => 'T02'],
-            ['label' => 'Meja 2', 'zone' => 'Outdoor', 'status' => 'active']
-        );
+        // Meja demo
+        foreach ([['M01', 'Meja 1', 'Indoor'], ['M02', 'Meja 2', 'Indoor'], ['M03', 'Meja 3', 'Outdoor']] as [$code, $label, $zone]) {
+            tap(DiningTable::firstOrNew(['canteen_id' => $canteen->id, 'code' => $code]))
+                ->forceFill(['label' => $label, 'zone' => $zone, 'status' => 'active'])->save();
+        }
 
-        // 2 tenant
-        $tenantsData = [
-            ['code' => 'TNT01', 'slug' => 'nasi-goreng-abadi', 'display_name' => 'Nasi Goreng Abadi'],
-            ['code' => 'TNT02', 'slug' => 'es-teh-segar', 'display_name' => 'Es Teh Segar'],
+        $blueprint = [
+            'AYAM' => [
+                'display' => 'Ayam Geprek Mantul',
+                'category' => 'Paket Ayam',
+                'menus' => [['Geprek Original', 15000], ['Geprek Keju', 20000]],
+                'modifier' => ['Level Pedas', [['Level 1', 0], ['Level 5', 2000]]],
+            ],
+            'KOPI' => [
+                'display' => 'Kopi Kita',
+                'category' => 'Kopi Susu',
+                'menus' => [['Kopi Susu Gula Aren', 18000], ['Americano', 16000]],
+                'modifier' => ['Ukuran', [['Regular', 0], ['Large', 5000]]],
+            ],
         ];
 
-        foreach ($tenantsData as $index => $data) {
-            $tenant = Tenant::updateOrCreate(
-                ['canteen_id' => $canteen->id, 'code' => $data['code']],
-                [
-                    'slug' => $data['slug'],
-                    'display_name' => $data['display_name'],
+        $tenants = [];
+        foreach ($blueprint as $code => $spec) {
+            $tenant = tap(Tenant::withTrashed()->firstOrNew(['canteen_id' => $canteen->id, 'code' => $code]))
+                ->forceFill([
+                    'slug' => strtolower($code).'-pusat',
+                    'display_name' => $spec['display'],
                     'status' => 'active',
-                ]
-            );
+                    'deleted_at' => null,
+                ]);
+            $tenant->save();
+            $tenants[$code] = $tenant;
 
-            // saldo tenant (manual, bukan factory)
-            TenantBalance::updateOrCreate(
-                ['tenant_id' => $tenant->id],
-                ['available_amount' => 0, 'held_amount' => 0]
-            );
+            tap(TenantBalance::firstOrNew(['tenant_id' => $tenant->id]))
+                ->forceFill(['available_amount' => 0, 'held_amount' => 0])->save();
 
-            // komisi berlaku
-            CommissionScheme::updateOrCreate(
-                ['tenant_id' => $tenant->id, 'valid_from' => now()->subDays(30)],
-                ['commission_rate' => 0.15, 'valid_to' => null]
-            );
+            tap(CommissionScheme::firstOrNew(['tenant_id' => $tenant->id, 'valid_from' => now()->startOfYear()]))
+                ->forceFill(['commission_rate' => 0.1500, 'valid_to' => null])->save();
 
-            // kategori + menu
-            $category = MenuCategory::updateOrCreate(
-                ['tenant_id' => $tenant->id, 'name' => 'Makanan Utama'],
-                ['sort_order' => 0, 'is_active' => true]
-            );
+            $category = tap(MenuCategory::firstOrNew(['tenant_id' => $tenant->id, 'name' => $spec['category']]))
+                ->forceFill(['sort_order' => 1, 'is_active' => true]);
+            $category->save();
 
-            $menu = Menu::updateOrCreate(
-                ['tenant_id' => $tenant->id, 'name' => $data['display_name'].' Spesial'],
-                [
-                    'category_id' => $category->id,
-                    'base_price' => 15000,
-                    'stock_qty' => 50,
-                    'is_available' => true,
-                    'prep_minutes' => 10,
-                ]
-            );
+            foreach ($spec['menus'] as $i => [$name, $price]) {
+                tap(Menu::firstOrNew(['tenant_id' => $tenant->id, 'name' => $name]))
+                    ->forceFill([
+                        'category_id' => $category->id,
+                        'base_price' => $price,
+                        'stock_qty' => 100,
+                        'is_available' => true,
+                        'prep_minutes' => 10 + $i,
+                    ])->save();
+            }
 
-            // modifier group + option
-            $group = ModifierGroup::updateOrCreate(
-                ['tenant_id' => $tenant->id, 'name' => 'Level Pedas'],
-                ['min_select' => 0, 'max_select' => 1, 'is_active' => true]
-            );
+            [$groupName, $options] = $spec['modifier'];
+            $group = tap(ModifierGroup::firstOrNew(['tenant_id' => $tenant->id, 'name' => $groupName]))
+                ->forceFill(['min_select' => 1, 'max_select' => 1, 'is_active' => true]);
+            $group->save();
 
-            ModifierOption::updateOrCreate(
-                ['tenant_id' => $tenant->id, 'group_id' => $group->id, 'name' => 'Pedas Sedang'],
-                ['price_delta' => 0, 'stock_qty' => 50, 'is_available' => true]
-            );
+            foreach ($options as [$optName, $delta]) {
+                tap(ModifierOption::firstOrNew(['tenant_id' => $tenant->id, 'group_id' => $group->id, 'name' => $optName]))
+                    ->forceFill(['price_delta' => $delta, 'stock_qty' => 100, 'is_available' => true])->save();
+            }
+        }
 
-            // role user untuk tenant ini
-            $user = User::updateOrCreate(
-                ['email' => "owner-tenant{$index}@demo.test"],
-                [
-                    'name' => "Owner {$data['display_name']}",
-                    'password' => bcrypt('password'),
-                    'email_verified_at' => now(),
-                ]
-            );
-
-            UserTenantRole::updateOrCreate(
-                ['user_id' => $user->id, 'tenant_id' => $tenant->id, 'role' => 'owner']
+        // Operator demo -> tenant AYAM (peran operator).
+        $operator = User::where('email', 'tenant@kantin.test')->first();
+        if ($operator !== null) {
+            UserTenantRole::firstOrCreate(
+                ['user_id' => $operator->id, 'tenant_id' => $tenants['AYAM']->id, 'role' => 'operator'],
             );
         }
     }

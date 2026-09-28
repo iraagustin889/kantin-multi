@@ -11,9 +11,10 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class MenuCategory extends Model
 {
+    use BelongsToTenant;
+
     /** @use HasFactory<MenuCategoryFactory> */
     use HasFactory;
-    use BelongsToTenant;
 
     protected $fillable = ['name', 'sort_order', 'is_active'];
 

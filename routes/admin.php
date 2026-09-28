@@ -3,8 +3,11 @@
 use Illuminate\Support\Facades\Route;
 
 /**
- * Konteks PENGELOLA KANTIN (internal, global — bukan per-canteen).
- * Prefix: admin, name: admin.*
- * Middleware auth+verified dari web.php; role:admin ditambahkan di modul otorisasi nanti.
+ * Konteks PENGELOLA KANTIN (internal). Prefix: admin, name: admin.*
+ * Grup (prefix/name/middleware auth+verified+role:admin) didefinisikan tunggal di PortalRoutes::admin();
+ * route fitur ditambahkan oleh modul di app/Modules/{Modul}/routes/admin.php.
+ * Administrasi tenant/role/komisi diisi Modul 5.
  */
-Route::get('/dashboard', fn () => view('admin.dashboard'))->name('dashboard');
+Route::get('/dashboard', function () {
+    return view('admin.dashboard');
+})->name('dashboard');

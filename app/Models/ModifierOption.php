@@ -10,9 +10,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ModifierOption extends Model
 {
+    use BelongsToTenant;
+
     /** @use HasFactory<ModifierOptionFactory> */
     use HasFactory;
-    use BelongsToTenant;
 
     protected $fillable = ['name', 'price_delta', 'stock_qty', 'is_available'];
 

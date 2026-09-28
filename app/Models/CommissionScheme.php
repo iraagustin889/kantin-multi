@@ -10,9 +10,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class CommissionScheme extends Model
 {
+    use BelongsToTenant;
+
     /** @use HasFactory<CommissionSchemeFactory> */
     use HasFactory;
-    use BelongsToTenant;
 
     protected $fillable = ['commission_rate', 'valid_from', 'valid_to'];
 

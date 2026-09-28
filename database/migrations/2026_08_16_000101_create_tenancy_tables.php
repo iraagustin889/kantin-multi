@@ -5,6 +5,11 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
+/**
+ * Domain A — Tenancy, pengguna, akses (ERD Fase 0).
+ * Uang = unsignedBigInteger (Rupiah). Rate = decimal exact (bukan float).
+ * Composite UNIQUE (id, canteen_id) / (tenant_id, id) menopang composite FK anti lintas-tenant.
+ */
 return new class extends Migration
 {
     public function up(): void
@@ -16,7 +21,7 @@ return new class extends Migration
             $table->string('name', 120);
             $table->decimal('tax_rate', 6, 4)->default(0);
             $table->decimal('service_fee_rate', 6, 4)->default(0);
-            $table->string('status', 20)->default('active');
+            $table->string('status', 20)->default('active'); // active|inactive
             $table->timestamps(6);
         });
 
@@ -26,12 +31,13 @@ return new class extends Migration
             $table->string('code', 30);
             $table->string('slug', 100);
             $table->string('display_name', 120);
-            $table->string('status', 20)->default('pending');
+            $table->string('status', 20)->default('pending'); // pending|active|suspended|inactive
             $table->timestamps(6);
             $table->softDeletes('deleted_at', 6);
 
             $table->unique(['canteen_id', 'code']);
             $table->unique(['canteen_id', 'slug']);
+            // Target composite FK anak tenant-owned.
             $table->unique(['id', 'canteen_id']);
         });
 
@@ -41,23 +47,25 @@ return new class extends Migration
             $table->unsignedBigInteger('held_amount')->default(0);
             $table->timestamps(6);
         });
+        // CHECK saldo tak boleh negatif (unsigned sudah menjamin >=0; CHECK eksplisit untuk audit).
         DB::statement('ALTER TABLE tenant_balances ADD CONSTRAINT chk_tenant_balance_nonneg CHECK (available_amount >= 0 AND held_amount >= 0)');
 
         Schema::create('tenant_bank_accounts', function (Blueprint $table): void {
             $table->id();
             $table->foreignId('tenant_id')->constrained()->cascadeOnDelete();
             $table->foreignId('verified_by')->nullable()->constrained('users')->nullOnDelete();
-            $table->text('account_number_cipher');
+            $table->text('account_number_cipher');      // terenkripsi (cast encrypted)
             $table->string('account_last4', 4);
             $table->string('bank_code', 20);
             $table->string('account_holder', 120);
-            $table->string('status', 20)->default('unverified');
+            $table->string('status', 20)->default('unverified'); // unverified|verified|rejected
             $table->boolean('is_primary')->default(false);
             $table->timestamps(6);
 
             $table->unique(['tenant_id', 'id']);
         });
 
+        // users sudah ada (Modul 1/2). Lengkapi kolom identitas dari ERD.
         Schema::table('users', function (Blueprint $table): void {
             $table->string('phone_e164', 20)->nullable()->unique()->after('email');
         });
@@ -66,7 +74,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->foreignId('canteen_id')->constrained()->cascadeOnDelete();
-            $table->string('role', 30);
+            $table->string('role', 30); // owner|manager|staff
             $table->timestamps(6);
 
             $table->unique(['user_id', 'canteen_id', 'role']);
@@ -76,7 +84,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->foreignId('tenant_id')->constrained()->cascadeOnDelete();
-            $table->string('role', 30);
+            $table->string('role', 30); // owner|operator|cashier -> sumber TenantContext
             $table->timestamps(6);
 
             $table->unique(['user_id', 'tenant_id', 'role']);

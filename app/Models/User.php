@@ -7,7 +7,6 @@ use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
@@ -22,16 +21,16 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
  * @property string $email
  * @property Carbon|null $email_verified_at
  * @property string $password
- * @property int|null $role_id
- * @property string $status
  * @property string|null $two_factor_secret
  * @property string|null $two_factor_recovery_codes
  * @property Carbon|null $two_factor_confirmed_at
  * @property string|null $remember_token
+ * @property string|null $role
+ * @property string $status
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
-#[Fillable(['name', 'email', 'password', 'role_id', 'status'])]
+#[Fillable(['name', 'email', 'password'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
 class User extends Authenticatable implements PasskeyUser
 {
@@ -64,22 +63,26 @@ class User extends Authenticatable implements PasskeyUser
     }
 
     /**
-     * The role assigned to this user.
-     *
-     * @return BelongsTo<Role, $this>
+     * Apakah user memegang role tertentu. Kontrak role interim Modul 2
+     * (kolom `role`); diformalkan menjadi relasi pada Modul 4–5.
      */
-    public function role(): BelongsTo
+    public function hasRole(string $role): bool
     {
-        return $this->belongsTo(Role::class);
+        return $this->role === $role && $this->isActive();
     }
 
     public function isAdmin(): bool
     {
-        return $this->role?->name === 'admin';
+        return $this->hasRole('admin');
     }
 
-    public function isTenant(): bool
+    public function isTenantOperator(): bool
     {
-        return $this->role?->name === 'tenant';
+        return $this->hasRole('tenant');
+    }
+
+    public function isActive(): bool
+    {
+        return $this->status === 'active';
     }
 }

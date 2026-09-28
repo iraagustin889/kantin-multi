@@ -9,7 +9,8 @@ use Illuminate\Support\Facades\Schema;
  * payment_events & ledger_entries bersifat append-only (koreksi via reversal, bukan edit).
  * idempotency_key unik pada operasi kritis; satu withdrawal aktif per tenant.
  */
-return new class () extends Migration {
+return new class extends Migration
+{
     public function up(): void
     {
         Schema::create('payments', function (Blueprint $table): void {

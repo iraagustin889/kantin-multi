@@ -11,9 +11,10 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ModifierGroup extends Model
 {
+    use BelongsToTenant;
+
     /** @use HasFactory<ModifierGroupFactory> */
     use HasFactory;
-    use BelongsToTenant;
 
     protected $fillable = ['name', 'min_select', 'max_select', 'is_active'];
 

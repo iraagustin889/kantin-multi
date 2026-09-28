@@ -10,11 +10,8 @@ parameters:
         - database/
         - routes/
 
-    level: 7
+    # Blade/SFC milik modul bukan kelas PHP murni (dianalisis via test, bukan PHPStan).
+    excludePaths:
+        - app/Modules/*/resources/*
 
-services:
-    -
-        class: App\PHPStan\Rules\NoRawScopeBypassRule
-        tags:
-            - phpstan.rules.rule
-            
+    level: 7

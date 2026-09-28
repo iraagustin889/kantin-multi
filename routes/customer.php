@@ -3,8 +3,11 @@
 use Illuminate\Support\Facades\Route;
 
 /**
- * Konteks PELANGGAN (publik, anonim — tanpa auth/verified).
- * Prefix: kantin/{canteen:slug}, name: customer.*
- * JANGAN pakai <x-layouts::app> di sini — guest akan crash karena $auth->user()->name null.
+ * Konteks PELANGGAN (publik, anonim). Prefix: kantin/{canteen}, name: customer.*
+ * Grup didefinisikan tunggal di PortalRoutes::customer(); route fitur ditambahkan oleh modul
+ * di app/Modules/{Modul}/routes/customer.php.
+ * Katalog & pemesanan diisi Modul 7–9; model binding canteen pada Modul 4.
  */
-Route::get('/', fn () => view('customer.home'))->name('home');
+Route::get('/', function (string $canteen) {
+    return view('customer.home', ['canteen' => $canteen]);
+})->name('home');

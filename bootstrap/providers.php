@@ -1,17 +1,18 @@
 <?php
 
-use App\Modules\Admin\Services\AdminServiceProvider;
-use App\Modules\Catalog\Services\CatalogServiceProvider;
-use App\Modules\Kitchen\Services\KitchenServiceProvider;
-use App\Modules\Ordering\Services\OrderingServiceProvider;
-use App\Modules\Payments\Services\PaymentsServiceProvider;
-use App\Modules\Reporting\Services\ReportingServiceProvider;
+use App\Modules\Admin\AdminServiceProvider;
+use App\Modules\Catalog\CatalogServiceProvider;
+use App\Modules\Kitchen\KitchenServiceProvider;
+use App\Modules\Ordering\OrderingServiceProvider;
+use App\Modules\Payments\PaymentsServiceProvider;
+use App\Modules\Reporting\ReportingServiceProvider;
 use App\Providers\AppServiceProvider;
 use App\Providers\FortifyServiceProvider;
 
 return [
     AppServiceProvider::class,
     FortifyServiceProvider::class,
+    // Modular monolith — satu provider per bounded context (Modul 2).
     AdminServiceProvider::class,
     CatalogServiceProvider::class,
     OrderingServiceProvider::class,
