@@ -13,7 +13,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Tenant extends Model
 {
     /** @use HasFactory<TenantFactory> */
-    use HasFactory, SoftDeletes;
+    use HasFactory;
+
+    use SoftDeletes;
 
     // canteen_id di-set eksplisit (bukan dari request pelanggan).
     protected $fillable = ['code', 'slug', 'display_name', 'status'];
@@ -39,5 +41,23 @@ class Tenant extends Model
     public function menus(): HasMany
     {
         return $this->hasMany(Menu::class);
+    }
+
+    /** @return HasMany<CommissionScheme, $this> */
+    public function commissionSchemes(): HasMany
+    {
+        return $this->hasMany(CommissionScheme::class);
+    }
+
+    /** @return HasMany<TenantBankAccount, $this> */
+    public function bankAccounts(): HasMany
+    {
+        return $this->hasMany(TenantBankAccount::class);
+    }
+
+    /** @return HasMany<UserTenantRole, $this> */
+    public function tenantRoles(): HasMany
+    {
+        return $this->hasMany(UserTenantRole::class);
     }
 }
