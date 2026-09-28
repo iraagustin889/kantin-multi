@@ -46,3 +46,4 @@ job tenant-aware nyata di project.
 ✅ 5/5 lolos — FK komposit menolak referensi lintas tenant di level database
 (modifier_options, menus, order_items), unique constraint tenant code dan
 idempotency key bekerja.
+
