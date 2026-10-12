@@ -20,6 +20,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class TableQrToken extends Model
 {
     protected $fillable = ['status'];
+
     protected function casts(): array
     {
         return [

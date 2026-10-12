@@ -15,9 +15,8 @@ use Illuminate\Support\Facades\DB;
  */
 final class QrTokenService
 {
-    public function __construct(private AuditLogger $audit)
-    {
-    }
+    public function __construct(private AuditLogger $audit) {}
+
     public function issue(DiningTable $table, ?CarbonInterface $expiresAt = null): string
     {
         return DB::transaction(function () use ($table, $expiresAt): string {
@@ -29,7 +28,7 @@ final class QrTokenService
                 ->update(['status' => 'revoked', 'revoked_at' => now()]);
 
             $token = OpaqueToken::issue(32);
-            $qr = new TableQrToken();
+            $qr = new TableQrToken;
             $qr->forceFill([
                 'dining_table_id' => $locked->id,
                 'token_hash' => $token['hash'],

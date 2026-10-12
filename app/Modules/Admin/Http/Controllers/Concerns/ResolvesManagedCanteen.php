@@ -15,6 +15,7 @@ trait ResolvesManagedCanteen
             ->whereIn('role', ['owner', 'manager', 'finance'])
             ->value('canteen_id');
         abort_if($id === null, 403, 'Anda tidak mengelola kantin mana pun.');
+
         return Canteen::query()->findOrFail((int) $id);
     }
 }

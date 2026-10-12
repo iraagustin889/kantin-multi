@@ -5,6 +5,8 @@ namespace App\Modules\Admin\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\DiningTable;
 use App\Modules\Admin\Http\Controllers\Concerns\ResolvesManagedCanteen;
+use App\Modules\Admin\Services\AuditLogger;
+use App\Modules\Admin\Services\QrCodeSvg;
 use App\Modules\Admin\Services\QrTokenService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -17,9 +19,7 @@ final class AdminDiningTableController extends Controller
     use AuthorizesRequests;
     use ResolvesManagedCanteen;
 
-    public function __construct(private QrTokenService $qr)
-    {
-    }
+    public function __construct(private QrTokenService $qr, private QrCodeSvg $svg, private AuditLogger $audit) {}
 
     public function index(Request $request): View
     {
@@ -42,7 +42,7 @@ final class AdminDiningTableController extends Controller
             'zone' => ['nullable', 'string', 'max:60'],
         ]);
 
-        (new DiningTable())->forceFill([
+        (new DiningTable)->forceFill([
             'canteen_id' => $canteen->id,
             'code' => $data['code'],
             'label' => $data['label'],
@@ -67,7 +67,35 @@ final class AdminDiningTableController extends Controller
         $this->authorize('rotateQr', $table);
         $plain = session('qr_plain');
         $url = is_string($plain) ? route('customer.scan', ['token' => $plain]) : null;
+        // UC-22 langkah 4: QR siap cetak (SVG vektor) dibuat dari URL sekali-tampil.
+        $svg = $url !== null ? $this->svg->render($url) : null;
 
-        return view('admin::tables.qr', compact('table', 'plain', 'url'));
+        return view('admin::tables.qr', compact('table', 'plain', 'url', 'svg'));
+    }
+
+    /**
+     * UC-22 langkah 5: nonaktifkan/aktifkan meja. Meja nonaktif menolak pindai QR (ResolveTableScan)
+     * tanpa menghapus token maupun riwayat sesi.
+     */
+    public function status(Request $request, DiningTable $table): RedirectResponse
+    {
+        $this->authorize('update', $table);
+        $data = $request->validate(['status' => ['required', Rule::in(['active', 'inactive'])]]);
+        $before = $table->status;
+        $table->forceFill(['status' => $data['status']])->save();
+
+        $this->audit->record(
+            'dining_table',
+            $table->id,
+            $data['status'] === 'active' ? 'activated' : 'deactivated',
+            ['status' => $before],
+            ['status' => $data['status']],
+            null,
+            $table->canteen_id
+        );
+
+        return redirect()->route('admin.tables.index')->with('status', $data['status'] === 'active'
+            ? "{$table->label} diaktifkan kembali."
+            : "{$table->label} dinonaktifkan; QR-nya tidak dapat dipakai sampai diaktifkan kembali.");
     }
 }
