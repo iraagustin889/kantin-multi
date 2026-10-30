@@ -22,8 +22,7 @@ class TenantMenuManagerTest extends TestCase
     {
         $canteen = Canteen::factory()->create();
         $tenant = Tenant::factory()->create(['canteen_id' => $canteen->id]);
-        $user = User::factory()->create(['role' => 'tenant', 'status' => 'active', 'email_verified_at' => 
-        now()]);
+        $user = User::factory()->create(['role' => 'tenant', 'status' => 'active', 'email_verified_at' => now()]);
         UserTenantRole::create(['user_id' => $user->id, 'tenant_id' => $tenant->id, 'role' => 'operator']);
 
         return [$tenant, $user];

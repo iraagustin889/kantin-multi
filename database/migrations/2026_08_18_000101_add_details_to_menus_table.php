@@ -8,7 +8,8 @@ use Illuminate\Support\Facades\Schema;
  * UC-13: deskripsi dan foto menu (WebP di disk public) serta soft delete agar menu yang pernah
  * dipesan tetap utuh pada riwayat transaksi (alur 3a).
  */
-return new class () extends Migration {
+return new class extends Migration
+{
     public function up(): void
     {
         Schema::table('menus', function (Blueprint $table): void {

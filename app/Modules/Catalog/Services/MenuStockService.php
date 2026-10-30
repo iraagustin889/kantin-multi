@@ -12,9 +12,7 @@ use Illuminate\Support\Facades\DB;
  */
 final class MenuStockService
 {
-    public function __construct(private AuditLogger $audit)
-    {
-    }
+    public function __construct(private AuditLogger $audit) {}
 
     public function adjust(Menu $menu, int $quantityDelta, string $type, string $idempotencyKey, ?string $reason = null): Menu
     {

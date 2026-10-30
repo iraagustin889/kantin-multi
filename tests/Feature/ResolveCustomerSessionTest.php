@@ -8,6 +8,7 @@ use App\Modules\Ordering\Services\ResolveCustomerSession;
 use App\Support\Tokens\OpaqueToken;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
+
 class ResolveCustomerSessionTest extends TestCase
 {
     use RefreshDatabase;
