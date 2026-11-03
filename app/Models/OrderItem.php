@@ -11,7 +11,7 @@ class OrderItem extends Model
 {
     use BelongsToTenant;
 
-    protected $fillable = ['name_snapshot', 'unit_price_snapshot', 'prep_minutes_snapshot', 'quantity', 'modifier_total', 'line_total'];
+    protected $fillable = ['name_snapshot', 'unit_price_snapshot', 'prep_minutes_snapshot', 'quantity', 'modifier_total', 'line_total', 'note'];
 
     protected function casts(): array
     {
@@ -30,7 +30,7 @@ class OrderItem extends Model
         return $this->belongsTo(TenantOrder::class);
     }
 
-        /** @return BelongsTo<Menu, $this> */
+    /** @return BelongsTo<Menu, $this> */
     public function menu(): BelongsTo
     {
         return $this->belongsTo(Menu::class);
@@ -41,5 +41,4 @@ class OrderItem extends Model
     {
         return $this->hasMany(OrderItemModifier::class);
     }
-
 }

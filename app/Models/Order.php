@@ -33,7 +33,7 @@ class Order extends Model
         return $this->belongsTo(Canteen::class);
     }
 
-        /** @return BelongsTo<CustomerSession, $this> */
+    /** @return BelongsTo<CustomerSession, $this> */
     public function customerSession(): BelongsTo
     {
         return $this->belongsTo(CustomerSession::class);

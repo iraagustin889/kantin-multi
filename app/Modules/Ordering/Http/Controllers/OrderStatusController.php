@@ -33,4 +33,3 @@ final class OrderStatusController extends Controller
         return view('ordering::order', ['order' => $order]);
     }
 }
-
