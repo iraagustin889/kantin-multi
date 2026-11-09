@@ -45,6 +45,7 @@ class Order extends Model
     {
         return $this->hasMany(TenantOrder::class);
     }
+
     /** @return HasOne<Payment, $this> */
     public function payment(): HasOne
     {
@@ -55,5 +56,4 @@ class Order extends Model
     {
         return $this->status === 'awaiting_payment';
     }
-
 }
